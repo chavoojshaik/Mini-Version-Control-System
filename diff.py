@@ -2,104 +2,162 @@ import os
 import sys
 import json
 import difflib
+import hashlib
 
 def read_object(repo_path, file_hash):
 
-    object_path = os.path.join(repo_path, "objects", file_hash)
+    object_path = os.path.join(
+        repo_path, "objects", file_hash
+    )
 
-    with open(object_path, "rb") as object_file:
-        data = object_file.read()
+    if not os.path.isfile(object_path):
+        return None
 
-    return data.decode("utf-8", errors="replace")
+    with open(object_path, "rb") as file:
+        return file.read().decode("utf-8", errors="replace")
 
+def get_file_content(file_path):
+
+    if not os.path.isfile(file_path):
+        return None
+
+    with open(file_path, "r", encoding="utf-8", errors="replace") as file:
+        return file.read()
+
+def get_commit_tree(repo_path):
+
+    head_path = os.path.join(repo_path, "HEAD")
+
+    with open(head_path, "r") as file:
+        head = file.read().strip()
+
+    if not head.startswith("ref: "):
+        return {}
+
+    branch_path = os.path.join(repo_path, head[5:])
+
+    if not os.path.isfile(branch_path):
+        return {}
+
+    with open(branch_path, "r") as file:
+        commit_hash = file.read().strip()
+
+    if not commit_hash:
+        return {}
+
+    commit_path = os.path.join(repo_path, "objects", commit_hash)
+
+    with open(commit_path, "r") as file:
+        commit_data = json.load(file)
+
+    return commit_data["tree"]
+
+def show_diff(file_path, old_content, new_content):
+
+    if old_content == new_content:
+        return
+    old_lines = (
+        old_content.splitlines(keepends=True)
+        if old_content is not None else []
+    )
+    new_lines = (
+        new_content.splitlines(keepends=True)
+        if new_content is not None else []
+    )
+    old_hash = (
+        hashlib.sha1(old_content.encode()).hexdigest()[:7]
+        if old_content is not None else "0000000"
+    )
+    new_hash = (
+        hashlib.sha1(new_content.encode()).hexdigest()[:7]
+        if new_content is not None else "0000000"
+    )
+    print(f"diff --git a/{file_path} b/{file_path}")
+    if old_content is None:
+        print("new file mode 100644")
+
+    elif new_content is None:
+        print("deleted file mode 100644")
+
+    print(f"index {old_hash}..{new_hash} 100644")
+
+    old_name = (
+        "/dev/null" if old_content is None
+        else f"a/{file_path}"
+    )
+    new_name = (
+        "/dev/null" if new_content is None
+        else f"b/{file_path}"
+    )
+
+    print(f"--- {old_name}")
+    print(f"+++ {new_name}")
+    diff_lines = difflib.unified_diff(
+        old_lines,
+        new_lines,
+        fromfile="",
+        tofile="",
+        lineterm=""
+    )
+
+    for line in diff_lines:
+        if line.startswith("---") or line.startswith("+++"):
+            continue
+
+        print(line)
 
 def diff(cached=False):
 
     repo_path = ".minigit"
-
     if not os.path.isdir(repo_path):
         print("MiniGit repository not found.")
         return
 
     index_path = os.path.join(repo_path, "index")
+    with open(index_path, "r") as file:
+        index = json.load(file)
 
-    with open(index_path, "r") as index_file:
-        index = json.load(index_file)
+    if cached:
+        old_tree = get_commit_tree(repo_path)
+        new_tree = index
 
-    head_path = os.path.join(repo_path, "HEAD")
+    else:
+        old_tree = index
+        new_tree = {}
 
-    with open(head_path, "r") as head_file:
-        head_content = head_file.read().strip()
+        for file_path in index:
+            if os.path.isfile(file_path):
+                data = get_file_content(file_path)
 
-    if not head_content.startswith("ref: "):
-        print("Invalid HEAD reference.")
-        return
+                new_tree[file_path] = hashlib.sha1(
+                    data.encode()
+                ).hexdigest()
+    all_files = sorted(set(old_tree) | set(new_tree))
 
-    branch_ref = head_content[5:]
-    branch_path = os.path.join(repo_path, branch_ref)
+    for file_path in all_files:
+        old_hash = old_tree.get(file_path)
+        new_hash = new_tree.get(file_path)
 
-    head_tree = {}
-
-    if os.path.isfile(branch_path):
-        with open(branch_path, "r") as branch_file:
-            commit_hash = branch_file.read().strip()
-
-        if commit_hash:
-            commit_path = os.path.join(
-                repo_path, "objects", commit_hash
-            )
-
-            if not os.path.isfile(commit_path):
-                print("Commit object not found.")
-                return
-
-            with open(commit_path, "r") as commit_file:
-                commit_data = json.load(commit_file)
-
-            head_tree = commit_data["tree"]
-
-    found_difference = False
-
-    for file_path, staged_hash in index.items():
-
-        staged_content = read_object(repo_path, staged_hash)
+        if old_hash == new_hash:
+            continue
+        old_content = (
+            read_object(repo_path, old_hash)
+            if old_hash else None
+        )
 
         if cached:
-            old_hash = head_tree.get(file_path)
-
-            if old_hash is None:
-                old_content = ""
-            else:
-                old_content = read_object(repo_path, old_hash)
-
-            new_content = staged_content
+            new_content = (
+                read_object(repo_path, new_hash)
+                if new_hash else None
+            )
 
         else:
-            if not os.path.isfile(file_path):
-                old_content = staged_content
-                new_content = ""
-            else:
-                with open(file_path, "r", encoding="utf-8",
-                          errors="replace") as file:
-                    new_content = file.read()
-                old_content = staged_content
-   
-        changes = list(difflib.unified_diff(
-            old_content.splitlines(keepends=True),
-            new_content.splitlines(keepends=True),
-            fromfile="a/" + file_path,
-            tofile="b/" + file_path
-        ))
-        if changes:
-            found_difference = True
-
-            print("diff --", file_path)
-
-            for line in changes:
-                print(line, end="")
-            print()
-    if not found_difference:
-        print("No differences found.")
+            new_content = get_file_content(file_path)
+        show_diff(
+            file_path,
+            old_content,
+            new_content
+        )
 
 if __name__ == "__main__":
 
@@ -110,6 +168,7 @@ if __name__ == "__main__":
         diff(cached=True)
 
     else:
+
         print("Usage:")
         print("python3 diff.py")
         print("python3 diff.py --cached")
