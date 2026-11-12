@@ -1,1 +1,0 @@
-This file belongs only to switch-test2
