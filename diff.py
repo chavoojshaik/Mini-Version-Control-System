@@ -4,8 +4,9 @@ import json
 import difflib
 import hashlib
 
-def read_object(repo_path, file_hash):
+def get_file_hash(file_path):
 
+<<<<<<< HEAD
     object_path = os.path.join(
         repo_path, "objects", file_hash
     )
@@ -25,12 +26,12 @@ def get_file_content(file_path):
 
 def get_commit_tree(repo_path):
 =======
+=======
+    with open(file_path, "rb") as file:
+        data = file.read()
+>>>>>>> member3
 
-    if not os.path.isfile(object_path):
-        return None
-
-    with open(object_path, "rb") as file:
-        return file.read().decode("utf-8", errors="replace")
+    return hashlib.sha1(data).hexdigest()
 
 def get_file_content(file_path):
 
@@ -40,6 +41,24 @@ def get_file_content(file_path):
     with open(file_path, "r", encoding="utf-8", errors="replace") as file:
         return file.read()
 
+def read_object(repo_path, file_hash):
+
+    if not file_hash:
+        return None
+
+    object_path = os.path.join(
+        repo_path, "objects", file_hash
+    )
+    if not os.path.isfile(object_path):
+        raise FileNotFoundError(
+            "Object not found: " + file_hash
+        )
+
+    with open(object_path, "rb") as file:
+        data = file.read()
+
+    return data.decode("utf-8", errors="replace")
+
 def get_commit_tree(repo_path):
 
     head_path = os.path.join(repo_path, "HEAD")
@@ -48,7 +67,7 @@ def get_commit_tree(repo_path):
         head = file.read().strip()
 
     if not head.startswith("ref: "):
-        return {}
+        raise ValueError("Invalid HEAD reference.")
 
     branch_path = os.path.join(repo_path, head[5:])
 
@@ -61,7 +80,12 @@ def get_commit_tree(repo_path):
     if not commit_hash:
         return {}
 
-    commit_path = os.path.join(repo_path, "objects", commit_hash)
+    commit_path = os.path.join(
+        repo_path, "objects", commit_hash
+    )
+
+    if not os.path.isfile(commit_path):
+        raise FileNotFoundError("Commit object not found.")
 
     with open(commit_path, "r") as file:
         commit_data = json.load(file)
@@ -72,23 +96,29 @@ def show_diff(file_path, old_content, new_content):
 
     if old_content == new_content:
         return
+
     old_lines = (
         old_content.splitlines(keepends=True)
         if old_content is not None else []
     )
+
     new_lines = (
         new_content.splitlines(keepends=True)
         if new_content is not None else []
     )
+
     old_hash = (
-        hashlib.sha1(old_content.encode()).hexdigest()[:7]
+        hashlib.sha1(old_content.encode("utf-8")).hexdigest()[:7]
         if old_content is not None else "0000000"
     )
+
     new_hash = (
-        hashlib.sha1(new_content.encode()).hexdigest()[:7]
+        hashlib.sha1(new_content.encode("utf-8")).hexdigest()[:7]
         if new_content is not None else "0000000"
     )
+
     print(f"diff --git a/{file_path} b/{file_path}")
+
     if old_content is None:
         print("new file mode 100644")
 
@@ -101,6 +131,7 @@ def show_diff(file_path, old_content, new_content):
         "/dev/null" if old_content is None
         else f"a/{file_path}"
     )
+
     new_name = (
         "/dev/null" if new_content is None
         else f"b/{file_path}"
@@ -108,37 +139,46 @@ def show_diff(file_path, old_content, new_content):
 
     print(f"--- {old_name}")
     print(f"+++ {new_name}")
+
     diff_lines = difflib.unified_diff(
         old_lines,
         new_lines,
         fromfile="",
         tofile="",
-        lineterm=""
+        n=3,
+        lineterm="\n"
     )
 
-    for line in diff_lines:
-        if line.startswith("---") or line.startswith("+++"):
+    for i, line in enumerate(diff_lines):
+
+        if i < 2:
             continue
 
-        print(line)
+        sys.stdout.write(line)
+
+    print()
 
 def diff(cached=False):
 
     repo_path = ".minigit"
+
     if not os.path.isdir(repo_path):
         print("MiniGit repository not found.")
         return
 
     index_path = os.path.join(repo_path, "index")
+
     with open(index_path, "r") as file:
         index = json.load(file)
 
     if cached:
+
         old_tree = get_commit_tree(repo_path)
         new_tree = index
 >>>>>>> member3
 
     else:
+
         old_tree = index
         new_tree = {}
 
@@ -225,20 +265,21 @@ def show_diff(file_path, old_content, new_content):
         print(line)
 =======
         for file_path in index:
-            if os.path.isfile(file_path):
-                data = get_file_content(file_path)
 
-                new_tree[file_path] = hashlib.sha1(
-                    data.encode()
-                ).hexdigest()
+            if os.path.isfile(file_path):
+
+                new_tree[file_path] = get_file_hash(file_path)
+
     all_files = sorted(set(old_tree) | set(new_tree))
 
     for file_path in all_files:
+
         old_hash = old_tree.get(file_path)
         new_hash = new_tree.get(file_path)
 
         if old_hash == new_hash:
             continue
+
         old_content = (
             read_object(repo_path, old_hash)
             if old_hash else None
@@ -283,6 +324,7 @@ def diff(cached=False):
             if old_hash else None
         )
         if cached:
+
             new_content = (
                 read_object(repo_path, new_hash)
                 if new_hash else None
@@ -292,22 +334,37 @@ def diff(cached=False):
 
 >>>>>>> member3
         else:
+
             new_content = get_file_content(file_path)
+
+        # Display difference
         show_diff(
             file_path,
             old_content,
             new_content
         )
 
+
 if __name__ == "__main__":
+<<<<<<< HEAD
     if len(sys.argv) == 1:
         diff()
+=======
 
-    elif len(sys.argv) == 2 and sys.argv[1] == "--cached":
-        diff(cached=True)
+    try:
+>>>>>>> member3
 
-    else:
+        if len(sys.argv) == 1:
+            diff()
 
-        print("Usage:")
-        print("python3 diff.py")
-        print("python3 diff.py --cached")
+        elif len(sys.argv) == 2 and sys.argv[1] == "--cached":
+            diff(cached=True)
+
+        else:
+            print("Usage:")
+            print("python3 diff.py")
+            print("python3 diff.py --cached")
+
+    except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
+
+        print("Diff error:", error)
