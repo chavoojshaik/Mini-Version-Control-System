@@ -1,17 +1,17 @@
 {
     "README.md": "1489630b25966bc33a5e5bdc112c0d600ed5c77a",
     "add.py": "acda0986380a7ac147980d829faacbde5ec9ec3b",
-    "branch.py": "8fef86f8b7fd7b46f85382d8bd8b67b2f10cfc58",
-    "checkout.py": "ee51c3c9fdd31c91603f17f3d247977b9d85531d",
+    "branch.py": "7c2c677b3d7528e0efffc5a450dcb51a6e59172c",
+    "branch_test.txt": "ccc3c58af1e7eff05db5d007c55bb6c281525ebf",
     "commit.py": "b6ffb9a1a00558112e0935d5394dbdea83851a87",
     "cs.txt": "758ed7ba2b9bca4d81efb5db978572a8567f834a",
-    "diff.py": "81e5255418331ed94233f534cc25b327565cc689",
+    "diff.py": "3a58a00f629c6b5aa5d54c2fc5f86c15ac9f93ce",
     "init.py": "083b71c447a0c93ed9c96d23fec3b37742a46f64",
     "log.py": "22f419649f4e747491ad163c206790c981eea36a",
     "merge.py": "f1d16ef8bc4c16d27a441ad520144079b3947b2c",
     "minigit.py": "0492111c4af849847b8e634d88f93b95d0993c0c",
-    "new.1": "9adde74150f8d5144ed3cb08a5b7e3004c1ae9fc",
+    "new.1": "95db23755d1d6fd4e5dece757f60517a92903555",
     "new.2": "372534e4b7226983472e8f5110ead3c606184cb6",
-    "new.3": "48381ba4a9428bf475a33a6b783606933f8e428b",
-    "status.py": "2e769e2d1fa2dc7c17d41b21c5cec95380cb88ad"
+    "status.py": "2e769e2d1fa2dc7c17d41b21c5cec95380cb88ad",
+    "switch.py": "be0cdb7f2d854ca094af07155a07425ab84f638e"
 }
