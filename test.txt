@@ -1,1 +1,0 @@
-Hello MiniGit - Version 2
