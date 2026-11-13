@@ -1,7 +1,5 @@
-
 import os
 import sys
-
 
 def branch(branch_name=None):
 

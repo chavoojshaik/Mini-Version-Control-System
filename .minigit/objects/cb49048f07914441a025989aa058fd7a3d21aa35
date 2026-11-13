@@ -1,0 +1,2 @@
+pagal
+print("Hello ji ")

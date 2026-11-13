@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "README.md": "1489630b25966bc33a5e5bdc112c0d600ed5c77a",
     "add.py": "acda0986380a7ac147980d829faacbde5ec9ec3b",
     "branch.py": "8fef86f8b7fd7b46f85382d8bd8b67b2f10cfc58",
@@ -9,4 +10,17 @@
     "merge.py": "f1d16ef8bc4c16d27a441ad520144079b3947b2c",
     "status.py": "2e769e2d1fa2dc7c17d41b21c5cec95380cb88ad",
     "switch.py": "ee51c3c9fdd31c91603f17f3d247977b9d85531d"
+=======
+    "README.md": "087926806f9666a99dcf6c9d9c80092b6f87d989",
+    "add.py": "acda0986380a7ac147980d829faacbde5ec9ec3b",
+    "branch.py": "7c2c677b3d7528e0efffc5a450dcb51a6e59172c",
+    "commit.py": "c6a6e07e536201b61cb972b71faa79fefe7eca8c",
+    "diff.py": "2e2e0e8aaeded4b91d39971f2572b7ac6ba06635",
+    "init.py": "083b71c447a0c93ed9c96d23fec3b37742a46f64",
+    "log.py": "a4a92885c0e6fd0dfe3c062d83c3e780d814f4ea",
+    "merge.py": "ce22f10997e558801a15999d0fb3104fae366ccb",
+    "status.py": "2e769e2d1fa2dc7c17d41b21c5cec95380cb88ad",
+    "switch.py": "be0cdb7f2d854ca094af07155a07425ab84f638e",
+    "restore.py": "5fdbef7bf57469b53f4168b0bcc30b1ff372af85"
+>>>>>>> 425232f083a50cbc05af89df46483592fd0cd069
 }
