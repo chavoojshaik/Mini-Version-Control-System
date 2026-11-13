@@ -1,2 +1,0 @@
-pagal
-print("Hello ji ")

@@ -1,26 +1,19 @@
 {
-<<<<<<< HEAD
-    "README.md": "1489630b25966bc33a5e5bdc112c0d600ed5c77a",
-    "add.py": "acda0986380a7ac147980d829faacbde5ec9ec3b",
-    "branch.py": "8fef86f8b7fd7b46f85382d8bd8b67b2f10cfc58",
-    "commit.py": "b6ffb9a1a00558112e0935d5394dbdea83851a87",
-    "diff.py": "66b828b8f770989d34b19bdf61e2ee2434396950",
-    "init.py": "083b71c447a0c93ed9c96d23fec3b37742a46f64",
-    "log.py": "22f419649f4e747491ad163c206790c981eea36a",
-    "merge.py": "f1d16ef8bc4c16d27a441ad520144079b3947b2c",
-    "status.py": "2e769e2d1fa2dc7c17d41b21c5cec95380cb88ad",
-    "switch.py": "ee51c3c9fdd31c91603f17f3d247977b9d85531d"
-=======
     "README.md": "087926806f9666a99dcf6c9d9c80092b6f87d989",
     "add.py": "acda0986380a7ac147980d829faacbde5ec9ec3b",
+    "bash.sh": "cf388f50ee72428d7758411bff4a0b49eb707598",
     "branch.py": "7c2c677b3d7528e0efffc5a450dcb51a6e59172c",
     "commit.py": "c6a6e07e536201b61cb972b71faa79fefe7eca8c",
     "diff.py": "2e2e0e8aaeded4b91d39971f2572b7ac6ba06635",
+    "file1.txt": "15c8344ca4688cfacfec48b3a1de066037b89d8f",
+    "file2.txt": "960c86a4dc898d57c8d6543a285a97b04a773e1d",
+    "file3.txt": "44e762e2aa14859e28d74572e0610ed7d8367845",
+    "file4.txt": "5d7f5184a185d5d879da4845cb0e251f4f3ab3c6",
     "init.py": "083b71c447a0c93ed9c96d23fec3b37742a46f64",
     "log.py": "a4a92885c0e6fd0dfe3c062d83c3e780d814f4ea",
     "merge.py": "ce22f10997e558801a15999d0fb3104fae366ccb",
+    "newfile.txt": "bba1d548fd529dda51d09d4fa339026d29aca673",
+    "restore.py": "5fdbef7bf57469b53f4168b0bcc30b1ff372af85",
     "status.py": "2e769e2d1fa2dc7c17d41b21c5cec95380cb88ad",
-    "switch.py": "be0cdb7f2d854ca094af07155a07425ab84f638e",
-    "restore.py": "5fdbef7bf57469b53f4168b0bcc30b1ff372af85"
->>>>>>> 425232f083a50cbc05af89df46483592fd0cd069
+    "switch.py": "14b58aa33dbfff3a6908a3b1adb4012707a96364"
 }

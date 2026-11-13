@@ -1,23 +1,46 @@
 import os
 import sys
 import json
-<<<<<<< HEAD
-import shutil
-
-=======
 import hashlib
-import shutil
 
 def get_file_hash(file_path):
     with open(file_path, "rb") as file:
         data = file.read()
-
     return hashlib.sha1(data).hexdigest()
+
+def is_safe_path(file_path):
+    if not isinstance(file_path, str) or not file_path:
+        return False
+
+    if "\0" in file_path or "\\" in file_path:
+        return False
+
+    if os.path.isabs(file_path):
+        return False
+
+    normalized = os.path.normpath(file_path)
+
+    if normalized in [".", ".."]:
+        return False
+
+    if normalized.startswith(".." + os.sep):
+        return False
+
+    first_part = normalized.split(os.sep)[0]
+
+    if first_part in [".minigit", ".git"]:
+        return False
+
+    return True
+
 
 def get_commit_tree(repo_path, commit_hash):
 
     if not commit_hash:
         return {}
+
+    if len(commit_hash) != 40:
+        raise ValueError("Invalid commit hash.")
 
     commit_path = os.path.join(
         repo_path, "objects", commit_hash
@@ -29,44 +52,13 @@ def get_commit_tree(repo_path, commit_hash):
     with open(commit_path, "r") as file:
         commit_data = json.load(file)
 
-    tree = commit_data["tree"]
+    tree = commit_data.get("tree")
 
     if not isinstance(tree, dict):
         raise ValueError("Invalid commit tree.")
 
     return tree
 
-def is_safe_path(file_path):
-
-    if not isinstance(file_path, str) or not file_path:
-        return False
-
-    if os.path.isabs(file_path):
-        return False
-
-    normalized_path = os.path.normpath(file_path)
-
-    if normalized_path in [".", ".."]:
-        return False
-
-    if normalized_path.startswith(".." + os.sep):
-        return False
-
-    if normalized_path == ".minigit":
-        return False
-
-    if normalized_path.startswith(".minigit" + os.sep):
-        return False
-
-    if normalized_path == ".git":
-        return False
-
-    if normalized_path.startswith(".git" + os.sep):
-        return False
-
-    return True
-
->>>>>>> 425232f083a50cbc05af89df46483592fd0cd069
 def checkout(branch_name):
 
     repo_path = ".minigit"
@@ -75,8 +67,7 @@ def checkout(branch_name):
         print("MiniGit repository not found.")
         return
 
-<<<<<<< HEAD
-=======
+    # Validate branch name
     if (
         not branch_name
         or branch_name in [".", ".."]
@@ -88,7 +79,6 @@ def checkout(branch_name):
         print("Invalid branch name.")
         return
 
->>>>>>> 425232f083a50cbc05af89df46483592fd0cd069
     branch_path = os.path.join(
         repo_path, "refs", "heads", branch_name
     )
@@ -98,51 +88,11 @@ def checkout(branch_name):
         return
 
     with open(branch_path, "r") as file:
-<<<<<<< HEAD
-        commit_hash = file.read().strip()
+        target_commit = file.read().strip()
 
-    if not commit_hash:
+    if not target_commit:
         print("Branch has no commits yet.")
         return
-
-    commit_path = os.path.join(
-        repo_path, "objects", commit_hash
-    )
-
-    if not os.path.isfile(commit_path):
-        print("Commit object not found.")
-        return
-
-    with open(commit_path, "r") as file:
-        commit_data = json.load(file)
-
-    target_tree = commit_data["tree"]
-
-    index_path = os.path.join(repo_path, "index")
-
-    with open(index_path, "r") as file:
-        current_index = json.load(file)
-        
-    for file_path, old_hash in current_index.items():
-
-        if not os.path.isfile(file_path):
-            continue
-
-        with open(file_path, "rb") as file:
-            current_data = file.read()
-
-        import hashlib
-        current_hash = hashlib.sha1(current_data).hexdigest()
-
-        if current_hash != old_hash:
-            print("Uncommitted changes found.")
-            print("Please commit or save your changes first.")
-            return
-
-    for file_path, file_hash in target_tree.items():
-
-=======
-        target_commit = file.read().strip()
 
     try:
         target_tree = get_commit_tree(
@@ -158,11 +108,14 @@ def checkout(branch_name):
             print("Unsafe file path:", file_path)
             return
 
-        if not isinstance(file_hash, str) or len(file_hash) != 40:
+        if (
+            not isinstance(file_hash, str)
+            or len(file_hash) != 40
+            or any(c not in "0123456789abcdef" for c in file_hash)
+        ):
             print("Invalid file hash:", file_path)
             return
 
->>>>>>> 425232f083a50cbc05af89df46483592fd0cd069
         object_path = os.path.join(
             repo_path, "objects", file_hash
         )
@@ -171,36 +124,19 @@ def checkout(branch_name):
             print("File object not found:", file_path)
             return
 
-<<<<<<< HEAD
-    for file_path, file_hash in target_tree.items():
+        if get_file_hash(object_path) != file_hash:
+            print("File object hash mismatch:", file_path)
+            return
 
-        object_path = os.path.join(
-            repo_path, "objects", file_hash
-        )
-
-        parent_dir = os.path.dirname(file_path)
-
-        if parent_dir:
-            os.makedirs(parent_dir, exist_ok=True)
-
-        with open(object_path, "rb") as source:
-            data = source.read()
-
-        with open(file_path, "wb") as destination:
-            destination.write(data)
-
-    with open(index_path, "w") as file:
-        json.dump(target_tree, file, indent=4)
-
+    # Read HEAD
     head_path = os.path.join(repo_path, "HEAD")
 
-    with open(head_path, "w") as file:
-        file.write("ref: refs/heads/" + branch_name + "\n")
-=======
-    head_path = os.path.join(repo_path, "HEAD")
-
-    with open(head_path, "r") as file:
-        head_content = file.read().strip()
+    try:
+        with open(head_path, "r") as file:
+            head_content = file.read().strip()
+    except OSError:
+        print("Cannot read HEAD.")
+        return
 
     if not head_content.startswith("ref: "):
         print("Invalid HEAD reference.")
@@ -209,14 +145,14 @@ def checkout(branch_name):
     current_ref = head_content[5:]
 
     if (
-        current_ref != "refs/heads/" + os.path.basename(current_ref)
-        or current_ref.startswith("/")
+        not current_ref.startswith("refs/heads/")
+        or "/" in current_ref[len("refs/heads/"):]
         or "\\" in current_ref
     ):
         print("Invalid HEAD reference.")
         return
 
-    current_branch = os.path.basename(current_ref)
+    current_branch = current_ref[len("refs/heads/"):]
 
     if current_branch == branch_name:
         print("Already on branch '" + branch_name + "'")
@@ -226,11 +162,12 @@ def checkout(branch_name):
         repo_path, current_ref
     )
 
-    current_commit = ""
+    if not os.path.isfile(current_branch_path):
+        print("Current branch reference not found.")
+        return
 
-    if os.path.isfile(current_branch_path):
-        with open(current_branch_path, "r") as file:
-            current_commit = file.read().strip()
+    with open(current_branch_path, "r") as file:
+        current_commit = file.read().strip()
 
     try:
         current_tree = get_commit_tree(
@@ -246,6 +183,7 @@ def checkout(branch_name):
             print("Unsafe current file path:", file_path)
             return
 
+    # Read index
     index_path = os.path.join(repo_path, "index")
 
     try:
@@ -253,6 +191,10 @@ def checkout(branch_name):
             current_index = json.load(file)
     except (OSError, ValueError, json.JSONDecodeError):
         print("Cannot read index.")
+        return
+
+    if not isinstance(current_index, dict):
+        print("Invalid index.")
         return
 
     if current_index != current_tree:
@@ -263,7 +205,7 @@ def checkout(branch_name):
     for file_path, old_hash in current_tree.items():
 
         if not os.path.isfile(file_path):
-            print("Uncommitted changes found:", file_path)
+            print("Tracked file is missing:", file_path)
             return
 
         if get_file_hash(file_path) != old_hash:
@@ -273,10 +215,14 @@ def checkout(branch_name):
     for file_path in target_tree:
 
         if (
-            os.path.exists(file_path)
+            os.path.lexists(file_path)
             and file_path not in current_tree
         ):
             print("Untracked file would be overwritten:", file_path)
+            return
+
+        if os.path.isdir(file_path):
+            print("Directory conflicts with target file:", file_path)
             return
 
     for file_path in target_tree:
@@ -284,16 +230,16 @@ def checkout(branch_name):
         parent = os.path.dirname(file_path)
 
         while parent:
-            if os.path.isfile(parent):
+            if (
+                os.path.isfile(parent)
+                and parent not in current_tree
+            ):
                 print("Directory conflict:", parent)
                 return
 
             parent = os.path.dirname(parent)
 
-        if os.path.isdir(file_path):
-            print("File conflicts with existing directory:", file_path)
-            return
-
+    # Read target file contents before modifying anything
     target_files = {}
 
     try:
@@ -303,34 +249,40 @@ def checkout(branch_name):
                 repo_path, "objects", file_hash
             )
 
-            with open(object_path, "rb") as source:
-                target_files[file_path] = source.read()
+            with open(object_path, "rb") as file:
+                target_files[file_path] = file.read()
 
     except OSError as error:
         print("Cannot read target files:", error)
         return
 
+    # Backup current tracked files
     backup_files = {}
 
     try:
         for file_path in current_tree:
 
-            with open(file_path, "rb") as source:
-                backup_files[file_path] = source.read()
+            with open(file_path, "rb") as file:
+                backup_files[file_path] = file.read()
 
     except OSError as error:
         print("Cannot back up current files:", error)
         return
 
+    # Save old index and HEAD contents for rollback
+    with open(index_path, "r") as file:
+        old_index_content = file.read()
+
     try:
 
+        # Remove files that do not exist in target branch
         for file_path in current_tree:
 
             if file_path not in target_tree:
-
                 if os.path.isfile(file_path):
                     os.remove(file_path)
 
+        # Restore target branch files
         for file_path, data in target_files.items():
 
             parent_dir = os.path.dirname(file_path)
@@ -338,12 +290,14 @@ def checkout(branch_name):
             if parent_dir:
                 os.makedirs(parent_dir, exist_ok=True)
 
-            with open(file_path, "wb") as destination:
-                destination.write(data)
+            with open(file_path, "wb") as file:
+                file.write(data)
 
+        # Update index
         with open(index_path, "w") as file:
             json.dump(target_tree, file, indent=4)
 
+        # Update HEAD
         with open(head_path, "w") as file:
             file.write(
                 "ref: refs/heads/" + branch_name + "\n"
@@ -352,37 +306,42 @@ def checkout(branch_name):
     except OSError as error:
 
         print("Switch failed:", error)
-        print("Attempting to restore previous files.")
+        print("Restoring previous state.")
 
+        # Remove newly created target files
         for file_path in target_tree:
 
             if file_path not in current_tree:
                 if os.path.isfile(file_path):
                     os.remove(file_path)
 
+        # Restore previous tracked files
         for file_path, data in backup_files.items():
 
             parent_dir = os.path.dirname(file_path)
 
             if parent_dir:
                 os.makedirs(parent_dir, exist_ok=True)
-            with open(file_path, "wb") as destination:
-                destination.write(data)
+
+            with open(file_path, "wb") as file:
+                file.write(data)
+
+        # Restore index
         with open(index_path, "w") as file:
-            json.dump(current_tree, file, indent=4)
+            file.write(old_index_content)
+
+        # Restore HEAD
         with open(head_path, "w") as file:
             file.write(head_content + "\n")
+
         return
->>>>>>> 425232f083a50cbc05af89df46483592fd0cd069
+
     print("Switched to branch '" + branch_name + "'")
+
 
 if __name__ == "__main__":
 
     if len(sys.argv) != 2:
-<<<<<<< HEAD
-        print("Usage: python3 checkout.py <branch_name>")
-=======
         print("Usage: python3 switch.py <branch_name>")
->>>>>>> 425232f083a50cbc05af89df46483592fd0cd069
     else:
         checkout(sys.argv[1])
