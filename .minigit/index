@@ -1,5 +1,5 @@
 {
-    "README.md": "1489630b25966bc33a5e5bdc112c0d600ed5c77a",
+    "README.md": "087926806f9666a99dcf6c9d9c80092b6f87d989",
     "add.py": "acda0986380a7ac147980d829faacbde5ec9ec3b",
     "branch.py": "7c2c677b3d7528e0efffc5a450dcb51a6e59172c",
     "commit.py": "c6a6e07e536201b61cb972b71faa79fefe7eca8c",
@@ -9,6 +9,5 @@
     "merge.py": "ce22f10997e558801a15999d0fb3104fae366ccb",
     "status.py": "2e769e2d1fa2dc7c17d41b21c5cec95380cb88ad",
     "switch.py": "be0cdb7f2d854ca094af07155a07425ab84f638e",
-    "restore.py": "5fdbef7bf57469b53f4168b0bcc30b1ff372af85",
-    "abc.txt": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    "restore.py": "5fdbef7bf57469b53f4168b0bcc30b1ff372af85"
 }
