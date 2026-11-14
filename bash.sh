@@ -38,7 +38,7 @@ python3 status.py
 
 rm newfile.txt
 
-python3 restore.py 
+python3 restore.py file4.txt 
 
 ls
 
