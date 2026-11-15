@@ -1,4 +1,19 @@
 {
-    "branchfile.txt": "4b9030a464ca34568aec74badfef461346c4a4a9",
-    "file1.txt": "9d206ec23d651c1de45fadac03ee9df1697ef2cb"
+    "README.md": "087926806f9666a99dcf6c9d9c80092b6f87d989",
+    "add.py": "acda0986380a7ac147980d829faacbde5ec9ec3b",
+    "bash.sh": "8f381d47ff2df3fc51d2088222e8595ab02a7144",
+    "branch.py": "7c2c677b3d7528e0efffc5a450dcb51a6e59172c",
+    "commit.py": "9643640723aa8f32ad586d8e839474f0c814cbef",
+    "diff.py": "2e2e0e8aaeded4b91d39971f2572b7ac6ba06635",
+    "file1.txt": "38be7d1b981f2fb6a4a0a052453f887373dc1fe8",
+    "file2.txt": "639daad06642a8eb86821ff7649e86f5f59c6139",
+    "file3.txt": "1eb2267bae4e47cab81f8866bbc7e06764ea9be0",
+    "file4.txt": "a441d6d72884e442ef02692864eee99b4ad933f5",
+    "init.py": "083b71c447a0c93ed9c96d23fec3b37742a46f64",
+    "log.py": "a4a92885c0e6fd0dfe3c062d83c3e780d814f4ea",
+    "merge.py": "ce22f10997e558801a15999d0fb3104fae366ccb",
+    "newfile.txt": "6ab378cf0762be441d1ee289f6e9795dd6a8da8f",
+    "restore.py": "5fdbef7bf57469b53f4168b0bcc30b1ff372af85",
+    "status.py": "2e769e2d1fa2dc7c17d41b21c5cec95380cb88ad",
+    "switch.py": "fd0fb7aecab3c0c717ebec590f7c38e181bb970c"
 }
