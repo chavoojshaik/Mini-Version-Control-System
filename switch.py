@@ -1,14 +1,17 @@
+
 import os
 import sys
 import json
 import hashlib
 
+
 def get_file_hash(file_path):
     with open(file_path, "rb") as file:
-        data = file.read()
-    return hashlib.sha1(data).hexdigest()
+        return hashlib.sha1(file.read()).hexdigest()
+
 
 def is_safe_path(file_path):
+
     if not isinstance(file_path, str) or not file_path:
         return False
 
@@ -39,7 +42,10 @@ def get_commit_tree(repo_path, commit_hash):
     if not commit_hash:
         return {}
 
-    if len(commit_hash) != 40:
+    if (
+        len(commit_hash) != 40
+        or any(c not in "0123456789abcdef" for c in commit_hash)
+    ):
         raise ValueError("Invalid commit hash.")
 
     commit_path = os.path.join(
@@ -58,6 +64,7 @@ def get_commit_tree(repo_path, commit_hash):
         raise ValueError("Invalid commit tree.")
 
     return tree
+
 
 def checkout(branch_name):
 
@@ -87,21 +94,23 @@ def checkout(branch_name):
         print("Branch does not exist.")
         return
 
-    with open(branch_path, "r") as file:
-        target_commit = file.read().strip()
-
-    if not target_commit:
-        print("Branch has no commits yet.")
-        return
-
     try:
+        with open(branch_path, "r") as file:
+            target_commit = file.read().strip()
+
+        if not target_commit:
+            print("Branch has no commits yet.")
+            return
+
         target_tree = get_commit_tree(
             repo_path, target_commit
         )
+
     except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
         print("Cannot read target branch:", error)
         return
 
+    # Validate target tree and blob objects
     for file_path, file_hash in target_tree.items():
 
         if not is_safe_path(file_path):
@@ -124,16 +133,13 @@ def checkout(branch_name):
             print("File object not found:", file_path)
             return
 
-        if get_file_hash(object_path) != file_hash:
-            print("File object hash mismatch:", file_path)
-            return
-
     # Read HEAD
     head_path = os.path.join(repo_path, "HEAD")
 
     try:
         with open(head_path, "r") as file:
             head_content = file.read().strip()
+
     except OSError:
         print("Cannot read HEAD.")
         return
@@ -166,17 +172,19 @@ def checkout(branch_name):
         print("Current branch reference not found.")
         return
 
-    with open(current_branch_path, "r") as file:
-        current_commit = file.read().strip()
-
     try:
+        with open(current_branch_path, "r") as file:
+            current_commit = file.read().strip()
+
         current_tree = get_commit_tree(
             repo_path, current_commit
         )
+
     except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
         print("Cannot read current branch:", error)
         return
 
+    # Validate current tree paths
     for file_path in current_tree:
 
         if not is_safe_path(file_path):
@@ -189,6 +197,7 @@ def checkout(branch_name):
     try:
         with open(index_path, "r") as file:
             current_index = json.load(file)
+
     except (OSError, ValueError, json.JSONDecodeError):
         print("Cannot read index.")
         return
@@ -202,6 +211,7 @@ def checkout(branch_name):
         print("Commit or discard your changes before switching.")
         return
 
+    # Check working directory changes
     for file_path, old_hash in current_tree.items():
 
         if not os.path.isfile(file_path):
@@ -212,6 +222,7 @@ def checkout(branch_name):
             print("Uncommitted changes found:", file_path)
             return
 
+    # Check untracked file conflicts
     for file_path in target_tree:
 
         if (
@@ -225,11 +236,13 @@ def checkout(branch_name):
             print("Directory conflicts with target file:", file_path)
             return
 
+    # Check parent directory conflicts
     for file_path in target_tree:
 
         parent = os.path.dirname(file_path)
 
         while parent:
+
             if (
                 os.path.isfile(parent)
                 and parent not in current_tree
@@ -239,50 +252,70 @@ def checkout(branch_name):
 
             parent = os.path.dirname(parent)
 
-    # Read target file contents before modifying anything
+    # Read only new or modified target files
     target_files = {}
 
     try:
         for file_path, file_hash in target_tree.items():
+
+            # Skip identical files
+            if current_tree.get(file_path) == file_hash:
+                continue
 
             object_path = os.path.join(
                 repo_path, "objects", file_hash
             )
 
             with open(object_path, "rb") as file:
-                target_files[file_path] = file.read()
+                data = file.read()
+
+            # Verify blob integrity
+            if hashlib.sha1(data).hexdigest() != file_hash:
+                print("File object hash mismatch:", file_path)
+                return
+
+            target_files[file_path] = data
 
     except OSError as error:
         print("Cannot read target files:", error)
         return
 
-    # Backup current tracked files
+    # Back up only files that will change or be removed
     backup_files = {}
 
     try:
         for file_path in current_tree:
 
-            with open(file_path, "rb") as file:
-                backup_files[file_path] = file.read()
+            if (
+                file_path not in target_tree
+                or current_tree[file_path] != target_tree[file_path]
+            ):
+                with open(file_path, "rb") as file:
+                    backup_files[file_path] = file.read()
 
     except OSError as error:
         print("Cannot back up current files:", error)
         return
 
-    # Save old index and HEAD contents for rollback
-    with open(index_path, "r") as file:
-        old_index_content = file.read()
+    # Save old index
+    try:
+        with open(index_path, "r") as file:
+            old_index_content = file.read()
+
+    except OSError:
+        print("Cannot save old index.")
+        return
 
     try:
 
-        # Remove files that do not exist in target branch
+        # Remove files not present in target branch
         for file_path in current_tree:
 
             if file_path not in target_tree:
                 if os.path.isfile(file_path):
                     os.remove(file_path)
 
-        # Restore target branch files
+        # Restore new and modified target files
         for file_path, data in target_files.items():
 
             parent_dir = os.path.dirname(file_path)
@@ -315,7 +348,7 @@ def checkout(branch_name):
                 if os.path.isfile(file_path):
                     os.remove(file_path)
 
-        # Restore previous tracked files
+        # Restore changed and removed files
         for file_path, data in backup_files.items():
 
             parent_dir = os.path.dirname(file_path)
@@ -343,5 +376,6 @@ if __name__ == "__main__":
 
     if len(sys.argv) != 2:
         print("Usage: python3 switch.py <branch_name>")
+
     else:
         checkout(sys.argv[1])
